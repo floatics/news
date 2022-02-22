@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity3"
+      xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>News - setting</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link href="/css/common.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!--script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script-->
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">News</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span
+                class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#">Setting</a></li>
+                <li class="nav-item"><a class="nav-link" aria-current="page" href="/logout">Sign out</a>
+            </ul>
+        </div>
+    </div>
+</nav>
+<header class="py-2 bg-light border-bottom mb-4"></header>
+
+<div class="container" id="app">
+    <div class="row">
+        <div class="list-group">
+            <div class="list-group-item list-group-item-action" v-for="(myKeyword, index) in myKeywords"
+                 :key="myKeyword.code">
+                <div class="row" v-if="!myKeyword.isEditable">
+                    <div class="col col-md-6 col-sm-12 col-xs-12">
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">검색어</span>
+                            </div>
+                            <input type="text" v-model="myKeyword.keyword.name" class="form-control"
+                                   placeholder="keyword" aria-label="keyword" aria-describedby="basic-addon1" disabled>
+                        </div>
+                    </div>
+                    <div class="col col-md-3 col-sm-8 col-xs-12">
+                        <div class="row" role="group" aria-label="Basic checkbox toggle button group">
+                            <div class="col" v-for="newsProvider in newsProviders">
+                                <input type="checkbox" class=""
+                                       v-bind:id="getProviderId(newsProvider.code, myKeyword.keyword.code)"
+                                       autocomplete="off"
+                                       :checked="checkProvider(myKeyword.newsProviders, newsProvider.code)" disabled>
+                                <label class=""
+                                       v-bind:for="getProviderId(newsProvider.code, myKeyword.keyword.code)">{{ newsProvider.name }}</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col col-md-3 col-sm-4 col-xs-12">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-dark" @click="edit(index)">수정</button>
+                            <button type="button" class="btn btn-danger" @click="remove(index)">삭제</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" v-if="myKeyword.isEditable">
+                    <div class="col col-md-6 col-sm-12 col-xs-12">
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">검색어</span>
+                            </div>
+                            <input type="text" v-model="myKeyword.keyword.name" class="form-control"
+                                   placeholder="keyword" aria-label="keyword" aria-describedby="basic-addon1"
+                                   :disabled="myKeyword.code != null">
+                        </div>
+                    </div>
+                    <div class="col col-md-3 col-sm-8 col-xs-12">
+                        <div class="row" role="group" aria-label="Basic checkbox toggle button group">
+                            <div class="col" v-for="newsProvider in newsProviders">
+                                <input type="checkbox" class=""
+                                       v-bind:id="getProviderId(newsProvider.code, myKeyword.keyword.code)"
+                                       autocomplete="off"
+                                       :checked="checkProvider(myKeyword.newsProviders, newsProvider.code)"
+                                       @change="changed(index, newsProvider, $event)">
+                                <label class=""
+                                       v-bind:for="getProviderId(newsProvider.code, myKeyword.keyword.code)">{{ newsProvider.name }}</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col col-md-3 col-sm-4 col-xs-12">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-success" @click="save(index)">저장</button>
+                            <button type="button" class="btn btn-secondary" @click="cancel(index)">취소</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-0">
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-dark" type="button" @click="addNewKeyword">수집 검색어 추가</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="py-5 bg-dark">
+    <div class="container"><p class="m-0 text-center text-white">Copyright &copy; <a class="text-light" href="https://floatics.github.io/work/">jmkim</a> 2022</p></div>
+</footer>
+
+<script src="/js/setting.js"></script>
+</body>
+</html>
